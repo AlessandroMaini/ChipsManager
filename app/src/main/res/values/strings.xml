@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">ChipsManager</string>
+    <string name="log_in">Log In</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="logout">LOGOUT</string>
+    <string name="join_a_lobby">Join a Lobby</string>
+    <string name="create_a_lobby">Create a Lobby</string>
+    <string name="lobby_name">Lobby Name</string>
+    <string name="your_name">Your Name</string>
+    <string name="finish">Finish</string>
+    <string name="name">Name</string>
+    <string name="access">Access</string>
+    <string name="exit">Exit</string>
+    <string name="pot">POT</string>
+    <string name="take_all">Take ALL</string>
+    <string name="take_partial">Take PARTIAL</string>
+    <string name="bet">BET</string>
+    <string name="fold">FOLD</string>
+</resources>

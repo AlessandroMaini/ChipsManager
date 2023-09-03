@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "670338648203",
+    "project_id": "chipsmanager-67909",
+    "storage_bucket": "chipsmanager-67909.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:670338648203:android:179d4908a3ef57b52eec8e",
+        "android_client_info": {
+          "package_name": "com.example.chipsmanager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "670338648203-csaqnk6qng0c6v7vb66nt5sa7g0pphe4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChsA6AXIv8qeYAzw5be3iszhl40g3Garw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "670338648203-csaqnk6qng0c6v7vb66nt5sa7g0pphe4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
