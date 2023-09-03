@@ -2,9 +2,15 @@ package com.example.chipsmanager;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -121,6 +127,17 @@ public class LobbyActivity extends AppCompatActivity {
 
         take_all.setOnClickListener(v -> withdrawAllPot(user_name, lobby_name));
 
+        take_partial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent take_intent = new Intent(LobbyActivity.this, BetActivity.class);
+                take_intent.putExtra("Type", "take");
+                take_intent.putExtra("Lobby", lobby_name);
+                take_intent.putExtra("User", user_name);
+                startActivity(take_intent);
+            }
+        });
+
         bet.setOnClickListener(v -> potReference.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 userReference.child("balance").get().addOnCompleteListener(task1 -> {
@@ -190,4 +207,5 @@ public class LobbyActivity extends AppCompatActivity {
             }
         });
     }
+
 }
