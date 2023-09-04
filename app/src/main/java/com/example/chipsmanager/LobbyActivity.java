@@ -2,15 +2,10 @@ package com.example.chipsmanager;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,34 +20,32 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class LobbyActivity extends AppCompatActivity {
-    private Button exit;
-    private ListView lobby_players;
-    private TextView current_lobby;
     private TextView pot_size;
     private TextView player_name;
     private TextView player_balance;
-    private Button take_all;
-    private Button take_partial;
-    private Button bet;
-    private Button fold;
+    private TextView current_bet;
+    private TextView fold_signal;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lobby);
 
-        exit = findViewById(R.id.exit_lobby);
-        lobby_players = findViewById(R.id.lobby_players);
-        current_lobby = findViewById(R.id.lobby_name);
+        Button exit = findViewById(R.id.exit_lobby);
+        ListView lobby_players = findViewById(R.id.lobby_players);
+        TextView current_lobby = findViewById(R.id.lobby_name);
         pot_size = findViewById(R.id.pot_size);
         player_name = findViewById(R.id.player_name);
         player_balance = findViewById(R.id.player_balance);
-        take_all = findViewById(R.id.take_all);
-        take_partial = findViewById(R.id.take_partial);
-        bet = findViewById(R.id.bet_button);
-        fold = findViewById(R.id.fold_button);
+        current_bet = findViewById(R.id.current_bet);
+        fold_signal = findViewById(R.id.fold_signal);
+        Button take_all = findViewById(R.id.take_all);
+        Button take_partial = findViewById(R.id.take_partial);
+        Button bet = findViewById(R.id.bet_button);
+        Button fold = findViewById(R.id.fold_button);
 
         exit.setOnClickListener(v -> {
             Toast.makeText(LobbyActivity.this, "Exited lobby!", Toast.LENGTH_SHORT).show();
@@ -77,8 +70,12 @@ public class LobbyActivity extends AppCompatActivity {
                 players.clear();
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     Player p = dataSnapshot.getValue(Player.class);
+                    assert p != null;
                     if (p.getBet() != 0) {
                         String txt = p.getName() + ": " + p.getBalance() + "   Bet: " + p.getBet();
+                        if (p.isFold()) {
+                            txt += "   FOLDED";
+                        }
                         players.add(txt);
                     }
                 }
@@ -113,6 +110,18 @@ public class LobbyActivity extends AppCompatActivity {
             }
         });
 
+        userReference.child("bet").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                current_bet.setText(String.valueOf(snapshot.getValue()));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
         userReference.child("balance").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -125,46 +134,87 @@ public class LobbyActivity extends AppCompatActivity {
             }
         });
 
-        take_all.setOnClickListener(v -> withdrawAllPot(user_name, lobby_name));
-
-        take_partial.setOnClickListener(new View.OnClickListener() {
+        userReference.child("fold").addValueEventListener(new ValueEventListener() {
             @Override
-            public void onClick(View v) {
-                Intent take_intent = new Intent(LobbyActivity.this, BetActivity.class);
-                take_intent.putExtra("Type", "take");
-                take_intent.putExtra("Lobby", lobby_name);
-                take_intent.putExtra("User", user_name);
-                startActivity(take_intent);
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                boolean folded = Boolean.parseBoolean(String.valueOf(snapshot.getValue()));
+                if (folded) {
+                    fold_signal.setVisibility(View.VISIBLE);
+                } else {
+                    fold_signal.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
             }
         });
 
-        bet.setOnClickListener(v -> potReference.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                userReference.child("balance").get().addOnCompleteListener(task1 -> {
-                    if (task1.isSuccessful()) {
-                        userReference.child("bet").get().addOnCompleteListener(task2 ->  {
-                                if (task2.isSuccessful()) {
-                                    int pot_dim = Integer.parseInt(String.valueOf(task.getResult().getValue()));
-                                    pot_dim += 100;
-                                    potReference.setValue(pot_dim);
-                                    int user_bal = Integer.parseInt(String.valueOf(task1.getResult().getValue()));
-                                    user_bal -= 100;
-                                    userReference.child("balance").setValue(user_bal);
-                                    int user_bet = Integer.parseInt(String.valueOf(task2.getResult().getValue()));
-                                    user_bet +=100;
-                                    userReference.child("bet").setValue(user_bet);
-                                } else {
-                                    Toast.makeText(LobbyActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();
-                                }
-                        });
+        take_all.setOnClickListener(v -> {
+            if (fold_signal.getVisibility() == View.VISIBLE) {
+                Toast.makeText(LobbyActivity.this, "You've folded!", Toast.LENGTH_SHORT).show();
+            } else {
+                withdrawAllPot(user_name, lobby_name);
+            }
+        });
+
+        take_partial.setOnClickListener(v -> {
+            if (fold_signal.getVisibility() == View.VISIBLE) {
+                Toast.makeText(LobbyActivity.this, "You've folded!", Toast.LENGTH_SHORT).show();
+            } else {
+                potReference.get().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        int pot_dim = Integer.parseInt(String.valueOf(task.getResult().getValue()));
+                        if (pot_dim == 0) {
+                            Toast.makeText(LobbyActivity.this, "Empty pot!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Intent take_intent = new Intent(LobbyActivity.this, BetActivity.class);
+                            take_intent.putExtra("Type", "take");
+                            take_intent.putExtra("Lobby", lobby_name);
+                            take_intent.putExtra("User", user_name);
+                            startActivity(take_intent);
+                            finish();
+                        }
                     } else {
                         Toast.makeText(LobbyActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();
                     }
                 });
-            } else {
-                Toast.makeText(LobbyActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();
             }
-        }));
+        });
+
+        bet.setOnClickListener(v -> {
+            if (fold_signal.getVisibility() == View.VISIBLE) {
+                Toast.makeText(LobbyActivity.this, "You've folded!", Toast.LENGTH_SHORT).show();
+            } else {
+                userReference.child("balance").get().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        int user_bal = Integer.parseInt(String.valueOf(task.getResult().getValue()));
+                        if (user_bal == 0) {
+                            Toast.makeText(LobbyActivity.this, "Empty balance!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Intent take_intent = new Intent(LobbyActivity.this, BetActivity.class);
+                            take_intent.putExtra("Type", "bet");
+                            take_intent.putExtra("Lobby", lobby_name);
+                            take_intent.putExtra("User", user_name);
+                            startActivity(take_intent);
+                            finish();
+                        }
+                    } else {
+                        Toast.makeText(LobbyActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+
+        fold.setOnClickListener(v -> {
+            if (fold_signal.getVisibility() == View.VISIBLE) {
+                Toast.makeText(LobbyActivity.this, "Already folded!", Toast.LENGTH_SHORT).show();
+            } else {
+                userReference.child("fold").setValue(true);
+                Toast.makeText(LobbyActivity.this, "Folded!", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void withdrawAllPot(String user_name, String lobby_name) {
@@ -195,12 +245,13 @@ public class LobbyActivity extends AppCompatActivity {
     }
 
     private void resetAllBets(String lobby_name) {
-        DatabaseReference lobbyReference = FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby_name).child("Players");
-        lobbyReference.get().addOnCompleteListener(task -> {
+        DatabaseReference playersReference = FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby_name).child("Players");
+        playersReference.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DataSnapshot dataSnapshot = task.getResult();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    lobbyReference.child(snapshot.getKey()).child("bet").setValue(0);
+                    playersReference.child(Objects.requireNonNull(snapshot.getKey())).child("bet").setValue(0);
+                    playersReference.child(snapshot.getKey()).child("fold").setValue(false);
                 }
             } else {
                 Toast.makeText(LobbyActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();

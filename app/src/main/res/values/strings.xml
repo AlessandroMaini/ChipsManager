@@ -30,4 +30,9 @@
     <string name="ok">OK</string>
     <string name="cancel">CANCEL</string>
     <string name="ce">CE</string>
+    <string name="max_amount">Max Amount</string>
+    <string name="all">ALL</string>
+    <string name="current_bet">Current Bet</string>
+    <string name="folded">FOLDED</string>
+    <string name="chips_manager">Chips Manager</string>
 </resources>

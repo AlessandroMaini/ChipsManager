@@ -13,16 +13,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class AccessLobbyActivity extends AppCompatActivity {
-    private Button access;
     private EditText player;
-    private final int DEFAULT_BALANCE = 100000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_access_lobby);
 
-        access = findViewById(R.id.access_lobby);
+        Button access = findViewById(R.id.access_lobby);
         player = findViewById(R.id.player_access);
 
         access.setOnClickListener(v -> {
@@ -43,8 +41,10 @@ public class AccessLobbyActivity extends AppCompatActivity {
         try {
             DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby).child("Players").push();
             reference.child("name").setValue(player);
+            int DEFAULT_BALANCE = 100000;
             reference.child("balance").setValue(DEFAULT_BALANCE);
             reference.child("bet").setValue(0);
+            reference.child("fold").setValue(false);
 
             Toast.makeText(this, "Lobby accessed successfully!", Toast.LENGTH_SHORT).show();
             Intent intent1 = new Intent(AccessLobbyActivity.this, LobbyActivity.class);
