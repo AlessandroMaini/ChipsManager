@@ -32,6 +32,12 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(LoginActivity.this, StartActivity.class));
+        finish();
+    }
+
     private void loginUser(String name, String password) {
         auth.signInWithEmailAndPassword(name, password).addOnCompleteListener(task -> {
             Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();

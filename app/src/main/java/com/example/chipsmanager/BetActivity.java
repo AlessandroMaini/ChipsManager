@@ -101,6 +101,17 @@ public class BetActivity extends AppCompatActivity {
         all.setOnClickListener(v -> bet_import.setText(max_amount.getText()));
     }
 
+    @Override
+    public void onBackPressed() {
+        String lobby_name = getIntent().getStringExtra("Lobby");
+        String user_name = getIntent().getStringExtra("User");
+        Intent intent = new Intent(BetActivity.this, LobbyActivity.class);
+        intent.putExtra("Lobby", lobby_name);
+        intent.putExtra("User", user_name);
+        startActivity(intent);
+        finish();
+    }
+
     private void setMaxAmount(TextView max_amount, String type, DatabaseReference lobby, DatabaseReference user) {
         if (type.equals("take")) {
             lobby.child("Pot").addValueEventListener(new ValueEventListener() {

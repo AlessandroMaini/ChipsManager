@@ -39,6 +39,12 @@ public class SignupActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(SignupActivity.this, StartActivity.class));
+        finish();
+    }
+
     private void registerUser(String name, String password) {
         auth.createUserWithEmailAndPassword(name, password).addOnCompleteListener(SignupActivity.this, task -> {
             if (task.isSuccessful()) {

@@ -66,6 +66,12 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("Lobby", lobby_list.get(position));
             startActivity(intent);
         });
+    }
 
+    @Override
+    public void onBackPressed() {
+        FirebaseAuth.getInstance().signOut();
+        Toast.makeText(MainActivity.this, "Logged out!", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(MainActivity.this, StartActivity.class));
     }
 }
