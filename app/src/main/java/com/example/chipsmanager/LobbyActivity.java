@@ -20,7 +20,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.Random;
 
 public class LobbyActivity extends AppCompatActivity {
     private TextView pot_size;
@@ -28,6 +28,7 @@ public class LobbyActivity extends AppCompatActivity {
     private TextView player_balance;
     private TextView current_bet;
     private TextView fold_signal;
+    private final Random random = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,11 +48,6 @@ public class LobbyActivity extends AppCompatActivity {
         Button bet = findViewById(R.id.bet_button);
         Button fold = findViewById(R.id.fold_button);
 
-        exit.setOnClickListener(v -> {
-            Toast.makeText(LobbyActivity.this, "Exited lobby!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(LobbyActivity.this, MainActivity.class));
-        });
-
         List<String> players = new ArrayList<>();
         ArrayAdapter adapter = new ArrayAdapter(this, R.layout.list_item, players);
         lobby_players.setAdapter(adapter);
@@ -64,6 +60,12 @@ public class LobbyActivity extends AppCompatActivity {
         DatabaseReference potReference = FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby_name).child("Pot");
         DatabaseReference userReference = FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby_name).child("Players").child(user_name);
 
+        exit.setOnClickListener(v -> {
+            userReference.child("active").setValue(false);
+            Toast.makeText(LobbyActivity.this, "Exited lobby!", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(LobbyActivity.this, MainActivity.class));
+        });
+
         playersReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -71,10 +73,13 @@ public class LobbyActivity extends AppCompatActivity {
                 for (DataSnapshot dataSnapshot : snapshot.getChildren()) {
                     Player p = dataSnapshot.getValue(Player.class);
                     assert p != null;
-                    if (p.getBet() != 0) {
+                    if (p.getBet() != 0 || p.isActive()) {
                         String txt = p.getName() + ": " + p.getBalance() + "   Bet: " + p.getBet();
                         if (p.isFold()) {
                             txt += "   FOLDED";
+                        }
+                        if (p.getBalance() == 0 && p.getBet() != 0) {
+                            txt += "   ALL IN";
                         }
                         players.add(txt);
                     }
@@ -211,8 +216,26 @@ public class LobbyActivity extends AppCompatActivity {
             if (fold_signal.getVisibility() == View.VISIBLE) {
                 Toast.makeText(LobbyActivity.this, "Already folded!", Toast.LENGTH_SHORT).show();
             } else {
-                userReference.child("fold").setValue(true);
-                Toast.makeText(LobbyActivity.this, "Folded!", Toast.LENGTH_SHORT).show();
+                userReference.child("balance").get().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        int user_bal = Integer.parseInt(String.valueOf(task.getResult().getValue()));
+                        if (user_bal == 0) {
+                            Toast.makeText(LobbyActivity.this, "Empty balance!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            userReference.child("fold").setValue(true);
+                            Toast.makeText(LobbyActivity.this, "Folded!", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(LobbyActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        });
+
+        lobby_players.setOnItemClickListener((parent, view, position, id) -> {
+            List<String> easter_eggs = List.of("IS A LOSER", "IS BLUFFING", "IS GUIDO ಥ_ಥ", "IS GAY (✖╭╮✖)", "IS NEAPOLITAN ಠ_ಠ");
+            if (Math.random() * 20 < 1) {
+                Toast.makeText(this, easter_eggs.get(random.nextInt(5)), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -250,8 +273,14 @@ public class LobbyActivity extends AppCompatActivity {
             if (task.isSuccessful()) {
                 DataSnapshot dataSnapshot = task.getResult();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    playersReference.child(Objects.requireNonNull(snapshot.getKey())).child("bet").setValue(0);
-                    playersReference.child(snapshot.getKey()).child("fold").setValue(false);
+                    Player p = snapshot.getValue(Player.class);
+                    assert p != null;
+                    if (!p.isActive()) {
+                        snapshot.getRef().removeValue();
+                    } else {
+                        snapshot.getRef().child("bet").setValue(0);
+                        snapshot.getRef().child("fold").setValue(false);
+                    }
                 }
             } else {
                 Toast.makeText(LobbyActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();

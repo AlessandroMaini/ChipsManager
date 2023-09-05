@@ -5,15 +5,17 @@ public class Player {
     private String name;
     private int bet;
     private boolean fold;
+    private boolean active;
 
     public Player() {
     }
 
-    public Player(int balance, String name, int bet, boolean fold) {
+    public Player(int balance, String name, int bet, boolean fold, boolean active) {
         this.balance = balance;
         this.name = name;
         this.bet = bet;
         this.fold = fold;
+        this.active = active;
     }
 
     public int getBalance() {
@@ -46,5 +48,13 @@ public class Player {
 
     public void setFold(boolean fold) {
         this.fold = fold;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

@@ -35,4 +35,10 @@
     <string name="current_bet">Current Bet</string>
     <string name="folded">FOLDED</string>
     <string name="chips_manager">Chips Manager</string>
+    <string name="starting_balance">Starting balance:</string>
+    <string-array name="starting_balances">
+        <item>1000</item>
+        <item>10000</item>
+        <item>100000</item>
+    </string-array>
 </resources>

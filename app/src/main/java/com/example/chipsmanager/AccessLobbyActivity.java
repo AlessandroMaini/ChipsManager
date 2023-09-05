@@ -28,7 +28,7 @@ public class AccessLobbyActivity extends AppCompatActivity {
             if (TextUtils.isEmpty(txt_player)) {
                 Toast.makeText(AccessLobbyActivity.this, "No name entered!", Toast.LENGTH_SHORT).show();
             } else if (txt_player.length() > 15) {
-                Toast.makeText(this, "Name too long (<15 chars)!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Name too long (max 15 chars)!", Toast.LENGTH_SHORT).show();
             } else {
                 accessLobbyWithName(txt_player);
             }
@@ -41,10 +41,17 @@ public class AccessLobbyActivity extends AppCompatActivity {
         try {
             DatabaseReference reference = FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby).child("Players").push();
             reference.child("name").setValue(player);
-            int DEFAULT_BALANCE = 100000;
-            reference.child("balance").setValue(DEFAULT_BALANCE);
+            FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby).child("Starting").get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    int starting = Integer.parseInt(String.valueOf(task.getResult().getValue()));
+                    reference.child("balance").setValue(starting);
+                } else {
+                    Toast.makeText(AccessLobbyActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();
+                }
+            });
             reference.child("bet").setValue(0);
             reference.child("fold").setValue(false);
+            reference.child("active").setValue(true);
 
             Toast.makeText(this, "Lobby accessed successfully!", Toast.LENGTH_SHORT).show();
             Intent intent1 = new Intent(AccessLobbyActivity.this, LobbyActivity.class);

@@ -16,8 +16,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.Objects;
-
 public class BetActivity extends AppCompatActivity {
     private TextView max_amount;
     private TextView bet_import;
@@ -191,8 +189,14 @@ public class BetActivity extends AppCompatActivity {
             if (task.isSuccessful()) {
                 DataSnapshot dataSnapshot = task.getResult();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    playersReference.child(Objects.requireNonNull(snapshot.getKey())).child("bet").setValue(0);
-                    playersReference.child(snapshot.getKey()).child("fold").setValue(false);
+                    Player p = snapshot.getValue(Player.class);
+                    assert p != null;
+                    if (!p.isActive()) {
+                        snapshot.getRef().removeValue();
+                    } else {
+                        snapshot.getRef().child("bet").setValue(0);
+                        snapshot.getRef().child("fold").setValue(false);
+                    }
                 }
             } else {
                 Toast.makeText(BetActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();
