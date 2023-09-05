@@ -60,11 +60,7 @@ public class LobbyActivity extends AppCompatActivity {
         DatabaseReference potReference = FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby_name).child("Pot");
         DatabaseReference userReference = FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby_name).child("Players").child(user_name);
 
-        exit.setOnClickListener(v -> {
-            userReference.child("active").setValue(false);
-            Toast.makeText(LobbyActivity.this, "Exited lobby!", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(LobbyActivity.this, MainActivity.class));
-        });
+        exit.setOnClickListener(v -> handleExitUser(userReference));
 
         playersReference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -233,11 +229,37 @@ public class LobbyActivity extends AppCompatActivity {
         });
 
         lobby_players.setOnItemClickListener((parent, view, position, id) -> {
-            List<String> easter_eggs = List.of("IS A LOSER", "IS BLUFFING", "IS GUIDO ಥ_ಥ", "IS GAY (✖╭╮✖)", "IS NEAPOLITAN ಠ_ಠ");
-            if (Math.random() * 20 < 1) {
-                Toast.makeText(this, easter_eggs.get(random.nextInt(5)), Toast.LENGTH_SHORT).show();
+            List<String> easter_eggs = List.of("IS A LOSER", "IS BLUFFING", "IS GUIDO ಥ_ಥ", "IS GAY ಠ_ಠ \uD83C\uDFF3️\u200D\uD83C\uDF08", "IS NEAPOLITAN (✖╭╮✖) \uD83C\uDF0B", "IS A CHAD \uD83D\uDDFF", "IS BLACK \uD83D\uDC80");
+            if (Math.random() * 100 < 1) {
+                Toast.makeText(this, easter_eggs.get(random.nextInt(7)), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = getIntent();
+        String user_name = intent.getStringExtra("User");
+        String lobby_name = intent.getStringExtra("Lobby");
+        DatabaseReference userReference = FirebaseDatabase.getInstance().getReference().child("Lobbies").child(lobby_name).child("Players").child(user_name);
+        handleExitUser(userReference);
+    }
+
+    private void handleExitUser(DatabaseReference userReference) {
+        userReference.child("active").setValue(false);
+        userReference.child("bet").get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                int user_bet = Integer.parseInt(String.valueOf(task.getResult().getValue()));
+                if (user_bet == 0) {
+                    userReference.removeValue();
+                }
+            } else {
+                Toast.makeText(LobbyActivity.this, "Error occurred!", Toast.LENGTH_SHORT).show();
+            }
+        });
+        Toast.makeText(LobbyActivity.this, "Exited lobby!", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(LobbyActivity.this, MainActivity.class));
+        finish();
     }
 
     private void withdrawAllPot(String user_name, String lobby_name) {
