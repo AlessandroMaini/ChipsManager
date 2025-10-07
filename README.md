@@ -46,14 +46,5 @@ This project is released under the **MIT License**. See the `LICENSE` file for d
 
 ---
 
-## Author
-
-**Your Name**
-
-- GitHub: `https://github.com/your-username`
-- Email: `your.email@example.com`
-
----
-
 *Chips Manager — manage chips, not rules.*
 
